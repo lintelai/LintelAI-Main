@@ -83,7 +83,7 @@ const waitlistForm = document.querySelector('.hero-cta');
 const emailInput = waitlistForm?.querySelector('.hero-input');
 
 const WAITLIST_URL =
-  "https://rawk3ctsrqheck223c7w2t3fvq0vllkq.lambda-url.us-east-2.on.aws/";
+  "https://qmxaql3h3suis6r3kgw2p5uawm0pnztm.lambda-url.ca-central-1.on.aws/";
 
 if (waitlistForm && emailInput) {
   waitlistForm.addEventListener('submit', async (e) => {
