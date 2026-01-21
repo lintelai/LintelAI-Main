@@ -26,7 +26,7 @@ window.addEventListener("load", () => {
 });
 
 // Navbar hide/show on scroll
-let navLastScrollY = window.scrollY;
+let lastScrollY = window.scrollY;
 let scrollUpDistance = 0;
 const nav = document.querySelector('.nav');
 const scrollUpThreshold = 200; // Must scroll up 200px before nav shows
@@ -35,7 +35,7 @@ const heroHeight = window.innerHeight; // Height of hero section
 window.addEventListener('scroll', () => {
     const currentScrollY = window.scrollY;
 
-    if (currentScrollY > navLastScrollY) {
+    if (currentScrollY > lastScrollY) {
         // Scrolling down - hide nav and reset scroll up counter
         if (currentScrollY > 100) {
             nav.style.transform = 'translateY(-100%)';
@@ -43,7 +43,7 @@ window.addEventListener('scroll', () => {
         scrollUpDistance = 0;
     } else {
         // Scrolling up - track distance
-        scrollUpDistance += navLastScrollY - currentScrollY;
+        scrollUpDistance += lastScrollY - currentScrollY;
 
         if (scrollUpDistance >= scrollUpThreshold || currentScrollY < 100) {
             // Show nav after scrolling up 200px or near top
@@ -58,7 +58,7 @@ window.addEventListener('scroll', () => {
         nav.classList.remove('scrolled');
     }
 
-    navLastScrollY = currentScrollY;
+    lastScrollY = currentScrollY;
 });
 
 // Smooth scroll for anchor links
@@ -80,45 +80,32 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 // WAITLIST FORM SUBMISSION
 // ============================================
 const waitlistForm = document.querySelector('.hero-cta');
+const waitlistBtn = waitlistForm?.querySelector('.btn-glass');
 const emailInput = waitlistForm?.querySelector('.hero-input');
 
-const WAITLIST_URL =
-  "https://rawk3ctsrqheck223c7w2t3fvq0vllkq.lambda-url.us-east-2.on.aws/";
+if (waitlistBtn && emailInput) {
+    waitlistBtn.addEventListener('click', (e) => {
+        e.preventDefault();
 
-if (waitlistForm && emailInput) {
-  waitlistForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+        const email = emailInput.value.trim();
 
-    const email = emailInput.value.trim();
+        // Check if email is empty
+        if (!email) {
+            alert('Please enter your email address.');
+            return;
+        }
 
-    if (!email) {
-      alert('Please enter your email address.');
-      return;
-    }
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            alert('Please enter a valid email address.');
+            return;
+        }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      alert('Please enter a valid email address.');
-      return;
-    }
-
-    try {
-      const res = await fetch(WAITLIST_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!res.ok) throw new Error("Request failed");
-
-      alert("You're on the waitlist! We'll be in touch soon.");
-      emailInput.value = "";
-
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong. Please try again.");
-    }
-  });
+        // Success - show alert and clear input
+        alert('🎉 You\'re on the waitlist! We\'ll be in touch soon.');
+        emailInput.value = '';
+    });
 }
 
 // Simple fade-in animation on scroll
@@ -210,8 +197,18 @@ if (carouselTrack && originalSlides.length > 0) {
     const totalSlides = allSlides.length; // original + 2 clones
 
     function updateCarousel(animate = true) {
-        const slideWidth = 47; // percentage including gap (45% + gap)
-        const offset = 27.5 - (currentIndex * slideWidth); // Center offset: (100 - 45) / 2 = 27.5
+        // Check if mobile
+        const isMobile = window.innerWidth <= 768;
+
+        let slideWidth, offset;
+
+        if (isMobile) {
+            slideWidth = 85; // percentage for mobile
+            offset = 7.5 - (currentIndex * (slideWidth + 12.5)); // Center offset for mobile (85% + gap)
+        } else {
+            slideWidth = 47; // percentage including gap (45% + gap)
+            offset = 27.5 - (currentIndex * slideWidth); // Center offset: (100 - 45) / 2 = 27.5
+        }
 
         if (animate) {
             carouselTrack.style.transition = 'transform 0.5s ease-in-out';
@@ -247,8 +244,9 @@ if (carouselTrack && originalSlides.length > 0) {
             }
 
             // Update position
-            const slideWidth = 47;
-            const offset = 27.5 - (currentIndex * slideWidth);
+            const isMobile = window.innerWidth <= 768;
+            const slideWidth = isMobile ? 85 : 47;
+            const offset = isMobile ? (7.5 - (currentIndex * slideWidth)) : (27.5 - (currentIndex * slideWidth));
             carouselTrack.style.transform = `translateX(${offset}%)`;
 
             // Update active states
@@ -273,6 +271,11 @@ if (carouselTrack && originalSlides.length > 0) {
         } else {
             isTransitioning = false;
         }
+
+        // Recalculate on resize
+        window.addEventListener('resize', () => {
+            updateCarousel(false);
+        });
     }
 
     function nextSlide() {
@@ -606,7 +609,7 @@ if (document.readyState === 'loading') {
 const floatingBtn = document.querySelector('.floating-demo-btn');
 
 if (floatingBtn) {
-    let floatingLastScrollY = window.scrollY;
+    let lastScrollY = window.scrollY;
 
     window.addEventListener('scroll', () => {
         // Show button after scrolling past hero section (100vh)
@@ -614,12 +617,12 @@ if (floatingBtn) {
         const pastHero = currentScrollY > window.innerHeight * 0.2;
 
         // Only show if past hero AND scrolling down
-        if (pastHero && currentScrollY > floatingLastScrollY) {
+        if (pastHero && currentScrollY > lastScrollY) {
             floatingBtn.classList.add('visible');
         } else {
             floatingBtn.classList.remove('visible');
         }
 
-        floatingLastScrollY = currentScrollY;
+        lastScrollY = currentScrollY;
     });
 }
