@@ -82,44 +82,84 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 const waitlistForm = document.querySelector('.hero-cta');
 const emailInput = waitlistForm?.querySelector('.hero-input');
 
-const WAITLIST_URL =
-  "https://qmxaql3h3suis6r3kgw2p5uawm0pnztm.lambda-url.ca-central-1.on.aws/";
+const WAITLIST_URL = "https://qmxaql3h3suis6r3kgw2p5uawm0pnztm.lambda-url.ca-central-1.on.aws/";
 
 if (waitlistForm && emailInput) {
-  waitlistForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+    waitlistForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-    const email = emailInput.value.trim();
+        const email = emailInput.value.trim();
 
-    if (!email) {
-      alert('Please enter your email address.');
-      return;
-    }
+        if (!email) {
+            alert('Please enter your email address.');
+            return;
+        }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      alert('Please enter a valid email address.');
-      return;
-    }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            alert('Please enter a valid email address.');
+            return;
+        }
 
-    try {
-      const res = await fetch(WAITLIST_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+        try {
+            const res = await fetch(WAITLIST_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
 
-      if (!res.ok) throw new Error("Request failed");
+            if (!res.ok) throw new Error("Request failed");
 
-      alert("You're on the waitlist! We'll be in touch soon.");
-      emailInput.value = "";
+            alert("You're on the waitlist! We'll be in touch soon.");
+            emailInput.value = "";
 
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong. Please try again.");
-    }
-  });
+        } catch (err) {
+            console.error(err);
+            alert("Something went wrong. Please try again.");
+        }
+    });
+
+    // Close when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile && waitlistForm.classList.contains('expanded')) {
+            if (!waitlistForm.contains(e.target)) {
+                waitlistForm.classList.remove('expanded');
+            }
+        }
+    });
 }
+
+
+// ============================================
+// MOBILE HERO CTA EXPAND
+// ============================================
+const heroCta = document.querySelector('.hero-cta');
+const heroInputField = document.querySelector('.hero-input');
+const joinBtn = document.querySelector('.hero-cta .btn-glass');
+
+if (heroCta && joinBtn && heroInputField) {
+    joinBtn.addEventListener('click', (e) => {
+        const isMobile = window.innerWidth <= 768;
+
+        if (isMobile && !heroCta.classList.contains('expanded')) {
+            e.preventDefault();
+            heroCta.classList.add('expanded');
+            heroInputField.focus();
+        }
+    });
+
+    // Close when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile && heroCta.classList.contains('expanded')) {
+            if (!heroCta.contains(e.target)) {
+                heroCta.classList.remove('expanded');
+            }
+        }
+    });
+}
+
 
 // Simple fade-in animation on scroll
 const observerOptions = {
@@ -210,16 +250,34 @@ if (carouselTrack && originalSlides.length > 0) {
     const totalSlides = allSlides.length; // original + 2 clones
 
     function updateCarousel(animate = true) {
-        const slideWidth = 47; // percentage including gap (45% + gap)
-        const offset = 27.5 - (currentIndex * slideWidth); // Center offset: (100 - 45) / 2 = 27.5
+        const isMobile = window.innerWidth <= 768;
+
+        let offset;
+
+        if (isMobile) {
+            // Pixel-based for mobile
+            const containerWidth = carouselTrack.parentElement.offsetWidth;
+            const slideElement = allSlides[0];
+            const slideWidth = slideElement.offsetWidth;
+            const gap = 32;
+            const centerOffset = (containerWidth - slideWidth) / 2;
+            const slidePosition = currentIndex * (slideWidth + gap);
+            offset = centerOffset - slidePosition - 20;
+
+            carouselTrack.style.transform = `translateX(${offset}px)`;
+        } else {
+            // Percentage-based for desktop (your original working code)
+            const slideWidth = 47;
+            offset = 27.5 - (currentIndex * slideWidth);
+
+            carouselTrack.style.transform = `translateX(${offset}%)`;
+        }
 
         if (animate) {
             carouselTrack.style.transition = 'transform 0.5s ease-in-out';
         } else {
             carouselTrack.style.transition = 'none';
         }
-
-        carouselTrack.style.transform = `translateX(${offset}%)`;
 
         // Update active states
         allSlides.forEach((slide, index) => {
@@ -231,27 +289,35 @@ if (carouselTrack && originalSlides.length > 0) {
     }
 
     function handleTransitionEnd() {
-        // Seamless jump when on clones
         if (currentIndex === 0 || currentIndex === totalSlides - 1) {
-            // Disable ALL transitions temporarily
             carouselTrack.style.transition = 'none';
             allSlides.forEach(slide => {
                 slide.style.transition = 'none';
             });
 
-            // Calculate new index
             if (currentIndex === 0) {
-                currentIndex = totalSlides - 2; // Jump to real Legal
+                currentIndex = totalSlides - 2;
             } else {
-                currentIndex = 1; // Jump to real Dashboard
+                currentIndex = 1;
             }
 
-            // Update position
-            const slideWidth = 47;
-            const offset = 27.5 - (currentIndex * slideWidth);
-            carouselTrack.style.transform = `translateX(${offset}%)`;
+            const isMobile = window.innerWidth <= 768;
 
-            // Update active states
+            if (isMobile) {
+                const containerWidth = carouselTrack.parentElement.offsetWidth;
+                const slideElement = allSlides[0];
+                const slideWidth = slideElement.offsetWidth;
+                const gap = 32;
+                const centerOffset = (containerWidth - slideWidth) / 2;
+                const slidePosition = currentIndex * (slideWidth + gap);
+                const offset = centerOffset - slidePosition - 20;
+                carouselTrack.style.transform = `translateX(${offset}px)`;
+            } else {
+                const slideWidth = 47;
+                const offset = 27.5 - (currentIndex * slideWidth);
+                carouselTrack.style.transform = `translateX(${offset}%)`;
+            }
+
             allSlides.forEach((slide, index) => {
                 slide.classList.remove('active');
                 if (index === currentIndex) {
@@ -259,10 +325,8 @@ if (carouselTrack && originalSlides.length > 0) {
                 }
             });
 
-            // Force reflow
             carouselTrack.offsetHeight;
 
-            // Re-enable transitions after a frame
             requestAnimationFrame(() => {
                 allSlides.forEach(slide => {
                     slide.style.transition = '';
